@@ -105,18 +105,3 @@ router.delete('/:id', auth, async (req, res) => {
 });
 
 module.exports = router;
-```
-
----
-
-### 7. `backend/.env.example`
-```
-# Database (from Supabase)
-DATABASE_URL=postgresql://user:password@host:5432/database
-
-# JWT Secret (generate a random string)
-JWT_SECRET=your-super-secret-jwt-key-change-this
-
-# Environment
-NODE_ENV=production
-PORT=5000
