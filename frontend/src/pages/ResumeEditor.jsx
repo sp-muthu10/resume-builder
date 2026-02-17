@@ -408,10 +408,4 @@ function ResumeEditor() {
 }
 
 export default ResumeEditor;
-```
 
----
-
-### 22. `frontend/.env.example`
-```
-VITE_API_URL=https://your-backend-url.onrender.com/api
