@@ -30,7 +30,26 @@ function ResumeEditor() {
   const loadResume = async () => {
     try {
       const response = await resumeAPI.getOne(id);
-      setResume(response.data);
+      const data = response.data;
+
+      // Parse resume_data if it comes as a string
+      if (typeof data.resume_data === 'string') {
+        data.resume_data = JSON.parse(data.resume_data);
+      }
+
+      // Make sure all fields exist
+      data.resume_data = {
+        personalInfo: {
+          fullName: '', email: '', phone: '',
+          location: '', linkedin: '', summary: '',
+          ...data.resume_data.personalInfo
+        },
+        workExperience: data.resume_data.workExperience || [],
+        education: data.resume_data.education || [],
+        skills: data.resume_data.skills || [],
+      };
+
+      setResume(data);
     } catch (error) {
       console.error('Error loading resume:', error);
     }
