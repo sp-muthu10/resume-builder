@@ -6,7 +6,7 @@ import Dashboard from './pages/Dashboard';
 import ResumeEditor from './pages/ResumeEditor';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -14,7 +14,8 @@ function App() {
   }, []);
 
   const ProtectedRoute = ({ children }) => {
-    return isAuthenticated ? children : <Navigate to="/login" />;
+    const token = localStorage.getItem('token');
+    return token ? children : <Navigate to="/login" />;
   };
 
   return (
@@ -22,21 +23,21 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
         <Route path="/register" element={<Register setIsAuthenticated={setIsAuthenticated} />} />
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        <Route 
-          path="/editor/:id?" 
+        <Route
+          path="/editor/:id?"
           element={
             <ProtectedRoute>
               <ResumeEditor />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route path="/" element={<Navigate to="/dashboard" />} />
       </Routes>
