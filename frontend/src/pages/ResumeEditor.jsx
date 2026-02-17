@@ -155,7 +155,6 @@ function ResumeEditor() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4">
@@ -170,17 +169,12 @@ function ResumeEditor() {
             />
           </div>
           <div className="flex gap-2">
-            <button
-              onClick={saveResume}
-              disabled={saving}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:bg-gray-400"
-            >
+            <button onClick={saveResume} disabled={saving}
+              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition disabled:bg-gray-400">
               {saving ? 'Saving...' : 'Save'}
             </button>
-            <button
-              onClick={downloadPDF}
-              className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition"
-            >
+            <button onClick={downloadPDF}
+              className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 transition">
               Download PDF
             </button>
           </div>
@@ -190,26 +184,19 @@ function ResumeEditor() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
-          {/* Editor Panel */}
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex gap-2 mb-6 border-b">
               {['personal', 'experience', 'education', 'skills'].map((section) => (
-                <button
-                  key={section}
-                  onClick={() => setActiveSection(section)}
+                <button key={section} onClick={() => setActiveSection(section)}
                   className={`px-4 py-2 font-medium capitalize ${
-                    activeSection === section
-                      ? 'border-b-2 border-blue-600 text-blue-600'
-                      : 'text-gray-600'
-                  }`}
-                >
+                    activeSection === section ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-600'
+                  }`}>
                   {section}
                 </button>
               ))}
             </div>
 
             <div className="space-y-4">
-              {/* Personal Info */}
               {activeSection === 'personal' && (
                 <>
                   <input type="text" placeholder="Full Name" value={personalInfo.fullName}
@@ -233,7 +220,6 @@ function ResumeEditor() {
                 </>
               )}
 
-              {/* Work Experience */}
               {activeSection === 'experience' && (
                 <>
                   {workExperience.map((exp, index) => (
@@ -271,7 +257,6 @@ function ResumeEditor() {
                 </>
               )}
 
-              {/* Education */}
               {activeSection === 'education' && (
                 <>
                   {education.map((edu, index) => (
@@ -304,7 +289,6 @@ function ResumeEditor() {
                 </>
               )}
 
-              {/* Skills */}
               {activeSection === 'skills' && (
                 <>
                   <div className="flex flex-wrap gap-2">
@@ -312,7 +296,8 @@ function ResumeEditor() {
                       <span key={index}
                         className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-2">
                         {skill}
-                        <button onClick={() => removeSkill(index)} className="text-blue-600 hover:text-blue-800">×</button>
+                        <button onClick={() => removeSkill(index)}
+                          className="text-blue-600 hover:text-blue-800">×</button>
                       </span>
                     ))}
                   </div>
@@ -325,7 +310,6 @@ function ResumeEditor() {
             </div>
           </div>
 
-          {/* Preview Panel */}
           <div className="bg-white rounded-lg shadow p-8" id="resume-preview">
             <div className="space-y-6">
               <div className="text-center border-b-2 pb-4">
@@ -408,4 +392,3 @@ function ResumeEditor() {
 }
 
 export default ResumeEditor;
-
