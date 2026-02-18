@@ -1,132 +1,194 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { resumeAPI } from '../services/api';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { resumeAPI } from "../services/api";
 
 function Dashboard() {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [search, setSearch] = useState("");
+  const [sort, setSort] = useState("updated");
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const user = (() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || {};
+    } catch {
+      return {};
+    }
+  })();
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) navigate("/login");
     loadResumes();
   }, []);
 
   const loadResumes = async () => {
     try {
-      const response = await resumeAPI.getAll();
-      setResumes(response.data);
-    } catch (error) {
-      console.error('Error loading resumes:', error);
+      const res = await resumeAPI.getAll();
+      setResumes(res.data || []);
+    } catch (err) {
+      setError("Failed to load resumes");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   const createNewResume = async () => {
     try {
-      const response = await resumeAPI.create({
-        title: 'Untitled Resume',
-        template_id: 'modern',
-        resume_data: {}
+      const res = await resumeAPI.create({
+        title: "Untitled Resume",
+        template_id: "modern",
+        resume_data: {},
       });
-      navigate(`/editor/${response.data.id}`);
-    } catch (error) {
-      console.error('Error creating resume:', error);
+      navigate(`/editor/${res.data.id}`);
+    } catch {
+      setError("Failed to create resume");
     }
   };
 
   const deleteResume = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this resume?')) return;
+    if (!confirm("Delete this resume?")) return;
     try {
       await resumeAPI.delete(id);
-      setResumes(resumes.filter(r => r.id !== id));
-    } catch (error) {
-      console.error('Error deleting resume:', error);
+      setResumes((prev) => prev.filter((r) => r.id !== id));
+    } catch {
+      setError("Delete failed");
     }
   };
 
+  const duplicateResume = async (resume) => {
+    try {
+      const res = await resumeAPI.create({
+        ...resume,
+        title: resume.title + " Copy",
+      });
+      setResumes((prev) => [res.data, ...prev]);
+    } catch {
+      setError("Duplicate failed");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate("/login");
+  };
+
+  const filtered = resumes
+    .filter((r) =>
+      r.title.toLowerCase().includes(search.toLowerCase())
+    )
+    .sort((a, b) =>
+      sort === "updated"
+        ? new Date(b.updated_at) - new Date(a.updated_at)
+        : a.title.localeCompare(b.title)
+    );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Resume Builder</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">Hello, {user.name}</span>
-            <button
-              onClick={handleLogout}
-              className="text-sm text-gray-600 hover:text-gray-900"
+    <div className="min-h-screen bg-gray-50 flex">
+
+      {/* Sidebar */}
+      <aside className="w-60 bg-white shadow-md p-6 hidden md:block">
+        <h2 className="text-xl font-bold mb-6">Dashboard</h2>
+        <button
+          onClick={createNewResume}
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 mb-4"
+        >
+          + New Resume
+        </button>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-gray-600 hover:text-black"
+        >
+          Logout
+        </button>
+      </aside>
+
+      {/* Main */}
+      <main className="flex-1 p-8">
+
+        {/* Header */}
+        <div className="flex flex-wrap gap-4 justify-between mb-6">
+          <h1 className="text-2xl font-bold">Hello, {user.name}</h1>
+
+          <div className="flex gap-3">
+            <input
+              placeholder="Search resumes..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="border px-3 py-2 rounded"
+            />
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="border px-3 py-2 rounded"
             >
-              Logout
-            </button>
+              <option value="updated">Last updated</option>
+              <option value="name">Name</option>
+            </select>
           </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-6 flex justify-between items-center">
-          <h2 className="text-xl font-semibold text-gray-800">My Resumes</h2>
-          <button
-            onClick={createNewResume}
-            className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition font-medium"
-          >
-            + Create New Resume
-          </button>
-        </div>
+        {error && (
+          <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+            {error}
+          </div>
+        )}
 
+        {/* Loading skeleton */}
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">Loading resumes...</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Array(6)
+              .fill()
+              .map((_, i) => (
+                <div
+                  key={i}
+                  className="h-32 bg-gray-200 animate-pulse rounded"
+                />
+              ))}
           </div>
-        ) : resumes.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No resumes yet</h3>
-            <p className="text-gray-600 mb-6">Create your first professional resume</p>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded shadow">
+            <p>No resumes found</p>
             <button
               onClick={createNewResume}
-              className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 transition"
+              className="mt-4 bg-blue-600 text-white px-6 py-2 rounded"
             >
-              Get Started
+              Create one
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {resumes.map((resume) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {filtered.map((resume) => (
               <div
                 key={resume.id}
-                className="bg-white rounded-lg shadow hover:shadow-lg transition p-6 cursor-pointer"
-                onClick={() => navigate(`/editor/${resume.id}`)}
+                className="bg-white rounded shadow hover:shadow-lg transition p-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {resume.title}
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
+                <div className="h-2 bg-blue-500 rounded mb-3" />
+                <h3 className="font-semibold text-lg">{resume.title}</h3>
+                <p className="text-sm text-gray-500 mb-4">
                   Updated {new Date(resume.updated_at).toLocaleDateString()}
                 </p>
+
                 <div className="flex gap-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/editor/${resume.id}`);
-                    }}
-                    className="flex-1 bg-blue-50 text-blue-600 py-2 rounded-md hover:bg-blue-100 transition text-sm font-medium"
+                    onClick={() => navigate(`/editor/${resume.id}`)}
+                    className="flex-1 bg-blue-50 text-blue-600 py-2 rounded"
                   >
                     Edit
                   </button>
+
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteResume(resume.id);
-                    }}
-                    className="px-4 bg-red-50 text-red-600 py-2 rounded-md hover:bg-red-100 transition text-sm"
+                    onClick={() => duplicateResume(resume)}
+                    className="px-3 bg-gray-100 rounded"
+                  >
+                    Copy
+                  </button>
+
+                  <button
+                    onClick={() => deleteResume(resume.id)}
+                    className="px-3 bg-red-100 text-red-600 rounded"
                   >
                     Delete
                   </button>
